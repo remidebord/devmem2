@@ -90,8 +90,8 @@ void usage(char *name)
 }
 
 int main(int argc, char **argv) {
-    int fd;
-    void *map_base, *virt_addr; 
+	int fd;
+	void *map_base, *virt_addr; 
 	unsigned long read_result, writeval;
 	off_t target;
 
@@ -147,18 +147,18 @@ int main(int argc, char **argv) {
 		optind++;
 	}
 
-    if ((fd = open(filename, oflags)) == -1) FATAL;
-    printf("%s opened.\n", filename); 
-    fflush(stdout);
+	if ((fd = open(filename, oflags)) == -1) FATAL;
+	printf("%s opened.\n", filename); 
+	fflush(stdout);
 
-    /* Map one page */
-    map_base = mmap(0, MAP_SIZE, mflags, MAP_SHARED, fd, target & ~MAP_MASK);
-    if (map_base == (void *) -1) FATAL;
-    printf("Memory mapped at address %p.\n", map_base); 
-    fflush(stdout);
-    
-    virt_addr = map_base + (target & MAP_MASK);
-    
+	/* Map one page */
+	map_base = mmap(0, MAP_SIZE, mflags, MAP_SHARED, fd, target & ~MAP_MASK);
+	if (map_base == (void *) -1) FATAL;
+	printf("Memory mapped at address %p.\n", map_base); 
+	fflush(stdout);
+
+	virt_addr = map_base + (target & MAP_MASK);
+
 	/* Write */
 	if (argc > 3) {
 		if (oflags == O_RDONLY) {
@@ -205,11 +205,11 @@ int main(int argc, char **argv) {
 			printf("0x%0*llx\n", (width[access_type] >> 2), (unsigned long long)read_result);
 	}
 
-    fflush(stdout);
+	fflush(stdout);
 
 unmap_file:
 	if (munmap(map_base, MAP_SIZE) == -1) FATAL;
-    close(fd);
-    return 0;
+	close(fd);
+	return 0;
 }
 
