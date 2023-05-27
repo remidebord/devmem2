@@ -86,6 +86,7 @@ void usage(char *name)
 	printf("Options:\n");
 	printf("\t--file, -f      : file to map (/dev/mem by default)\n");
 	printf("\t--read-only, -r : open file in read-only mode\n");
+	printf("\t--verbose, -v   : display more informations\n");
 	printf("\t--help, -h      : display this help and exit\n");
 }
 
@@ -100,11 +101,14 @@ int main(int argc, char **argv) {
 	int access_length = 0;
 	int oflags = O_RDWR | O_SYNC;
 	int mflags = PROT_READ | PROT_WRITE;
+	int mlength = MAP_SIZE;
+	char verbose = 0;
 
 	static struct option long_options[] =
 	{
 		{"file"     , required_argument, 0, 'f'},
 		{"read-only", no_argument      , 0, 'r'},
+		{"verbose"  , no_argument      , 0, 'v'},
 		{"help"     , no_argument      , 0, 'h'},
 		{0, 0, 0, 0}
 	};
@@ -112,7 +116,7 @@ int main(int argc, char **argv) {
 	int option_index = 0;
 	int c;
 
-	while ((c = getopt_long(argc, argv, "c:rh", long_options, &option_index)) != -1) {
+	while ((c = getopt_long(argc, argv, "f:rvh", long_options, &option_index)) != -1) {
 		switch(c) {
 			case 'f':
 				filename = optarg;
@@ -120,6 +124,9 @@ int main(int argc, char **argv) {
 			case 'r':
 				oflags = O_RDONLY;
 				mflags = PROT_READ;
+				break;
+			case 'v':
+				verbose = 1;
 				break;
 			case 'h':
 				usage(argv[0]);
@@ -148,14 +155,23 @@ int main(int argc, char **argv) {
 	}
 
 	if ((fd = open(filename, oflags)) == -1) FATAL;
-	printf("%s opened.\n", filename); 
-	fflush(stdout);
+	
+	if (verbose) {
+		printf("%s opened.\n", filename); 
+		fflush(stdout);
+	}
 
-	/* Map one page */
-	map_base = mmap(0, MAP_SIZE, mflags, MAP_SHARED, fd, target & ~MAP_MASK);
+	/* Map one page by default, except if more datas needs to be written/read */
+	if (access_length > mlength)
+		mlength = access_length;
+
+	map_base = mmap(0, mlength, mflags, MAP_SHARED, fd, target & ~MAP_MASK);
 	if (map_base == (void *) -1) FATAL;
-	printf("Memory mapped at address %p.\n", map_base); 
-	fflush(stdout);
+	
+	if (verbose) {
+		printf("Memory mapped at address %p.\n", map_base); 
+		fflush(stdout);
+	}
 
 	virt_addr = map_base + (target & MAP_MASK);
 

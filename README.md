@@ -1,31 +1,91 @@
-A github mirror (and potential place to collect improvements)
-for the devmem2 utility.
-
-Originally written by, and hosted at, www.lartmaker.nl/lartware/ .
-
-From `devmem2.c` header comment:
-
 ```
 devmem2.c: Simple program to read/write from/to any location in memory.
-
- Copyright (C) 2000, Jan-Derk Bakker (jdb@lartmaker.nl)
-
-This software has been developed for the LART computing board
-(http://www.lart.tudelft.nl/). The development has been sponsored by
-the Mobile MultiMedia Communications (http://www.mmc.tudelft.nl/)
-and Ubiquitous Communications (http://www.ubicom.tudelft.nl/)
-projects.
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program, in the file COPYING.
 ```
+Originally written by, and hosted at, www.lartmaker.nl/lartware/.
+Put on Github by [Radii](http://www.lart.tudelft.nl/).
+
+Forked version with additional features and a display similar to [devmem](https://elixir.bootlin.com/busybox/1.36.0/source/miscutils/devmem.c).
+
+New features : 
+- Add the possibility to read/write different files.
+- Add an option to open a file in read-only mode.
+- Write/dump memory regions.
+
+Usage : 
+```
+root@qemuarm64:~# ./devmem2
+Usage:  ./devmem2 [ options ] { address } [ type / length [ data ] ]
+        address       : memory address to act upon
+        type / length : access operation type : [b]yte, [h]alfword, [w]ord, or access length
+        data          : data to be written
+Options:
+        --file, -f      : file to map (/dev/mem by default)
+        --read-only, -r : open file in read-only mode
+        --verbose, -v   : display more informations
+        --help, -h      : display this help and exit
+```
+
+Examples :
+
+```
+root@qemuarm64:~# ./devmem2 0x4ff7f000
+0x00000000
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 b
+0x00
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 h
+0x0000
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 w
+0x00000000
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 32
+00000000: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 32 0x31
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 32
+00000000: 3131 3131 3131 3131 3131 3131 3131 3131  1111111111111111
+00000010: 3131 3131 3131 3131 3131 3131 3131 3131  1111111111111111
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 128
+00000000: 3131 3131 3131 3131 3131 3131 3131 3131  1111111111111111
+00000010: 3131 3131 3131 3131 3131 3131 3131 3131  1111111111111111
+00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000050: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000060: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000070: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+
+root@qemuarm64:~# ./devmem2 0x4ff7f020 w 0x31323334
+
+root@qemuarm64:~# ./devmem2 0x4ff7f000 128
+00000000: 3131 3131 3131 3131 3131 3131 3131 3131  1111111111111111
+00000010: 3131 3131 3131 3131 3131 3131 3131 3131  1111111111111111
+00000020: 3433 3231 0000 0000 0000 0000 0000 0000  4321............
+00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000050: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000060: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+00000070: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+
+root@qemuarm64:~# echo "Hello world!" > hello.txt
+
+root@qemuarm64:~# ./devmem2 -f ./hello.txt 0x00000000 12
+00000000: 4865 6c6c 6f20 776f 726c 6421  Hello world!
+
+root@qemuarm64:~# ./devmem2 --file ./hello.txt --verbose 0x00000000 12
+./hello.txt opened.
+Memory mapped at address 0x7fb1450000.
+00000000: 4865 6c6c 6f20 776f 726c 6421  Hello world!
+
+root@qemuarm64:~# ./devmem2 --file ./hello.txt 0x00000006 1 0x57
+
+root@qemuarm64:~# ./devmem2 --file ./hello.txt 0x00000000 12
+00000000: 4865 6c6c 6f20 576f 726c 6421  Hello World!
+```
+
+
